@@ -1,0 +1,9 @@
+.venv
+.git
+.dvc
+data
+model
+mlruns
+mlflow.db
+*.ipynb
+*.pdf

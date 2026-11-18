@@ -1,0 +1,31 @@
+name: build
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          load: true
+          tags: digits-api
+          build-args: CACHE_BUST=${{ github.run_id }}
+          secrets: dagshub_token=${{ secrets.DAGSHUB_TOKEN }}
+
+      - name: Test predict
+        run: |
+          docker run -d -p 8000:8000 digits-api
+          curl -f --retry 15 --retry-connrefused --retry-delay 2 \
+            -X POST localhost:8000/predict \
+            -H "Content-Type: application/json" \
+            -d "{\"pixels\": $(python3 -c 'print([0]*64)')}"
